@@ -59,7 +59,7 @@ def main():
 
         console.print(f"[green]📈 SPY Price: ${spy_price:.2f} | VWAP: ${vwap:.2f} | MFI: {mfi:.2f}[/green]")
 
-        buy_signal = True  # For testing — replace with your logic when ready
+        buy_signal = True  # Testing mode — replace with real logic
 
         if buy_signal:
             console.print("[bold green]✅ Buy Signal: SPY is above VWAP and MFI > 50[/bold green]\n")
@@ -113,13 +113,23 @@ def main():
         best = display.iloc[0]
         console.print(f"\n[bold magenta]🔥 Suggested Contract to Buy: {best['Contract']} (Strike: ${best['Strike']:.2f})[/bold magenta]")
 
+        # Build and send Telegram alert
         if buy_signal:
+            contract_symbol = best['Contract']
+            strike = best['Strike']
+            exp_date = this_friday
+            option_type = "Call" if "C" in contract_symbol else "Put"
+
             alert = (
-                f"🚨 SPY Buy Signal\n"
+                f"🚨 SPY Buy Signal\n\n"
                 f"Price: ${spy_price:.2f}\n"
                 f"VWAP: ${vwap:.2f}\n"
-                f"MFI: {mfi:.2f}\n"
-                f"Suggested: {best['Contract']} (Strike ${best['Strike']:.2f})"
+                f"MFI: {mfi:.2f}\n\n"
+                f"Suggested Contract:\n"
+                f"Ticker: SPY\n"
+                f"C/P: {option_type}\n"
+                f"Strike Price: ${strike:.2f}\n"
+                f"Exp: {exp_date}"
             )
             send_telegram_alert(alert)
 
