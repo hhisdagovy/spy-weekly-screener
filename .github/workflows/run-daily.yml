@@ -19,7 +19,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install yfinance pandas ta rich
+          pip install yfinance pandas ta rich request
 
       - name: Run script
         run: python spy_itm_call_screener.py
