@@ -29,13 +29,11 @@ def get_vwap_mfi():
     if df.empty or len(df) < 20:
         return None, None, None
 
-    # Make sure all columns are 1D Series (not 2D arrays)
     high = df['High'].squeeze()
     low = df['Low'].squeeze()
     close = df['Close'].squeeze()
     volume = df['Volume'].squeeze()
 
-    # Calculate indicators
     mfi = MFIIndicator(high=high, low=low, close=close, volume=volume).money_flow_index()
     typical_price = (high + low + close) / 3
     vwap = (typical_price * volume).cumsum() / volume.cumsum()
@@ -53,7 +51,6 @@ def main():
     console.print(f"[bold]📅 {datetime.now().strftime('%A, %B %d, %Y %I:%M %p')}[/bold]\n")
 
     try:
-        # VWAP + MFI logic
         spy_price, vwap, mfi = get_vwap_mfi()
 
         if spy_price is None:
@@ -62,14 +59,10 @@ def main():
 
         console.print(f"[green]📈 SPY Price: ${spy_price:.2f} | VWAP: ${vwap:.2f} | MFI: {mfi:.2f}[/green]")
 
-        buy_signal = True
+        buy_signal = True  # For testing — replace with your logic when ready
 
         if buy_signal:
             console.print("[bold green]✅ Buy Signal: SPY is above VWAP and MFI > 50[/bold green]\n")
-            
-            alert = f"🚨 SPY Buy Signal\nPrice: ${spy_price:.2f}\nVWAP: ${vwap:.2f}\nMFI: {mfi:.2f}\nSuggested: {best['Contract']} (Strike ${best['Strike']:.2f})"
-            send_telegram_alert(alert)
-            
         else:
             console.print("[bold red]❌ No Buy Signal: SPY below VWAP or MFI too low[/bold red]\n")
 
@@ -86,7 +79,6 @@ def main():
 
         console.print(f"[bold]🗓 Expiration: {this_friday}[/bold]")
 
-        # Filter ITM calls within ~$5 of current price
         itm_calls = calls[calls['strike'] < spy_price]
         near_itm = itm_calls[(spy_price - itm_calls['strike']) <= 5.00]
 
@@ -94,18 +86,12 @@ def main():
             console.print("[yellow]⚠️ No ITM calls within $5 of SPY price found.[/yellow]")
             return
 
-        # Prepare display DataFrame
         display = near_itm[['contractSymbol', 'strike', 'lastPrice', 'impliedVolatility', 'volume', 'openInterest']].copy()
         display.columns = ['Contract', 'Strike', 'Last Price', 'IV', 'Volume', 'OI']
-
-        # Add calculated columns
         display['Liquidity'] = (display['Volume'] / display['Last Price']).round(2)
         display['% ITM'] = ((spy_price - display['Strike']) / spy_price * 100).round(2)
-
-        # Sort by Liquidity
         display = display.sort_values(by='Liquidity', ascending=False)
 
-        # Create rich table
         table = Table(title="📊 Top ITM Calls Near Spot", show_lines=True)
         for column in display.columns:
             table.add_column(column, justify="right" if column != "Contract" else "left")
@@ -124,11 +110,19 @@ def main():
 
         console.print(table)
 
-        # Suggested contract
         best = display.iloc[0]
         console.print(f"\n[bold magenta]🔥 Suggested Contract to Buy: {best['Contract']} (Strike: ${best['Strike']:.2f})[/bold magenta]")
 
-        # Save to CSV
+        if buy_signal:
+            alert = (
+                f"🚨 SPY Buy Signal\n"
+                f"Price: ${spy_price:.2f}\n"
+                f"VWAP: ${vwap:.2f}\n"
+                f"MFI: {mfi:.2f}\n"
+                f"Suggested: {best['Contract']} (Strike ${best['Strike']:.2f})"
+            )
+            send_telegram_alert(alert)
+
         display.to_csv("spy_calls_log.csv", index=False)
 
     except Exception as e:
