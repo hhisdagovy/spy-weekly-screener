@@ -6,6 +6,43 @@ from rich.console import Console
 from rich.table import Table
 from ta.volume import MFIIndicator
 import requests
+import matplotlib.pyplot as plt
+from matplotlib.dates import DateFormatter
+
+def generate_spy_chart():
+    df = yf.download("SPY", interval="5m", period="1d", progress=False)
+
+    if df.empty:
+        return None
+
+    typical_price = (df['High'] + df['Low'] + df['Close']) / 3
+    vwap = (typical_price * df['Volume']).cumsum() / df['Volume'].cumsum()
+
+    fig, ax = plt.subplots(figsize=(10, 4))
+    ax.plot(df.index, df['Close'], label='SPY Price', linewidth=1.5)
+    ax.plot(df.index, vwap, label='VWAP', linestyle='--', linewidth=1.2)
+
+    ax.set_title('SPY Price vs VWAP')
+    ax.set_ylabel('Price')
+    ax.legend()
+    ax.grid(True)
+    ax.xaxis.set_major_formatter(DateFormatter("%H:%M"))
+
+    plt.tight_layout()
+    plt.savefig('spy_chart.png')
+    plt.close()
+    return 'spy_chart.png'
+
+def send_telegram_image(caption, image_path):
+    token = '7500825997:AAEXiLITgtjBTiehSeRti6RctKmVVGddoNg'
+    chat_id = '-1002532416599'
+    url = f'https://api.telegram.org/bot{token}/sendPhoto'
+    with open(image_path, 'rb') as photo:
+        response = requests.post(url, data={'chat_id': chat_id, 'caption': caption}, files={'photo': photo})
+        if response.ok:
+            print("✅ Chart image sent.")
+        else:
+            print(f"❌ Failed to send image: {response.text}")
 
 def send_telegram_alert(message):
     token = '7500825997:AAEXiLITgtjBTiehSeRti6RctKmVVGddoNg'
@@ -134,7 +171,9 @@ def main():
                 f"Volume: {int(volume)}\n"
                 f"Exp: {exp_date}"
             )
-            send_telegram_alert(alert)
+
+            chart_path = generate_spy_chart()
+            send_telegram_image(alert, chart_path)
 
         display.to_csv("spy_calls_log.csv", index=False)
 
