@@ -129,6 +129,8 @@ def main():
             contract_symbol = best['Contract']
             strike = best['Strike']
             exp_date = this_friday
+            premium = best['Last Price']
+            volume = best['Volume']
             option_type = "Call" if "C" in contract_symbol else "Put"
 
             alert = (
@@ -140,6 +142,8 @@ def main():
                 f"Ticker: SPY\n"
                 f"C/P: {option_type}\n"
                 f"Strike Price: ${strike:.2f}\n"
+                f"Premium: ${premium:.2f}\n"
+                f"Volume: {int(volume)}\n"
                 f"Exp: {exp_date}"
             )
             send_telegram_alert(alert)
