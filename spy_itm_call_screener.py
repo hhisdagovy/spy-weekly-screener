@@ -59,7 +59,7 @@ def main():
 
         console.print(f"[green]📈 SPY Price: ${spy_price:.2f} | VWAP: ${vwap:.2f} | MFI: {mfi:.2f}[/green]")
 
-        buy_signal = True  # Testing mode — replace with real logic
+        buy_signal = buy_signal = spy_price > vwap and mfi > 50
 
         if buy_signal:
             console.print("[bold green]✅ Buy Signal: SPY is above VWAP and MFI > 50[/bold green]\n")
