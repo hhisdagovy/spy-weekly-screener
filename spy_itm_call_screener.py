@@ -2,6 +2,7 @@ import yfinance as yf
 import pandas as pd
 from datetime import datetime
 import os
+import pytz
 from rich.console import Console
 from rich.table import Table
 from ta.volume import MFIIndicator
@@ -22,6 +23,13 @@ def send_telegram_alert(message):
 
 def clear_terminal():
     os.system('cls' if os.name == 'nt' else 'clear')
+
+def is_market_open():
+    eastern = pytz.timezone('US/Eastern')
+    now = datetime.now(eastern)
+    market_open = now.replace(hour=9, minute=30, second=0, microsecond=0)
+    market_close = now.replace(hour=16, minute=0, second=0, microsecond=0)
+    return market_open <= now <= market_close
 
 def get_vwap_mfi():
     df = yf.download("SPY", interval="5m", period="1d", progress=False)
@@ -50,6 +58,10 @@ def main():
     console.print(f"[bold cyan]🔍 SPY Weekly ITM Call Screener[/bold cyan]")
     console.print(f"[bold]📅 {datetime.now().strftime('%A, %B %d, %Y %I:%M %p')}[/bold]\n")
 
+    if not is_market_open():
+        console.print("[yellow]⏰ Market is closed. Screener will not run outside trading hours.[/yellow]")
+        return
+
     try:
         spy_price, vwap, mfi = get_vwap_mfi()
 
@@ -59,7 +71,7 @@ def main():
 
         console.print(f"[green]📈 SPY Price: ${spy_price:.2f} | VWAP: ${vwap:.2f} | MFI: {mfi:.2f}[/green]")
 
-        buy_signal = buy_signal = spy_price > vwap and mfi > 50
+        buy_signal = spy_price > vwap and mfi > 50
 
         if buy_signal:
             console.print("[bold green]✅ Buy Signal: SPY is above VWAP and MFI > 50[/bold green]\n")
@@ -113,7 +125,6 @@ def main():
         best = display.iloc[0]
         console.print(f"\n[bold magenta]🔥 Suggested Contract to Buy: {best['Contract']} (Strike: ${best['Strike']:.2f})[/bold magenta]")
 
-        # Build and send Telegram alert
         if buy_signal:
             contract_symbol = best['Contract']
             strike = best['Strike']
