@@ -66,6 +66,10 @@ def main():
 
         if buy_signal:
             console.print("[bold green]✅ Buy Signal: SPY is above VWAP and MFI > 50[/bold green]\n")
+            
+            alert = f"🚨 SPY Buy Signal\nPrice: ${spy_price:.2f}\nVWAP: ${vwap:.2f}\nMFI: {mfi:.2f}\nSuggested: {best['Contract']} (Strike ${best['Strike']:.2f})"
+            send_telegram_alert(alert)
+            
         else:
             console.print("[bold red]❌ No Buy Signal: SPY below VWAP or MFI too low[/bold red]\n")
 
