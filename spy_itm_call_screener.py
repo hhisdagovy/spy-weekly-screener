@@ -5,6 +5,20 @@ import os
 from rich.console import Console
 from rich.table import Table
 from ta.volume import MFIIndicator
+import requests
+
+def send_telegram_alert(message):
+    token = '7500825997:AAEXiLITgtjBTiehSeRti6RctKmVVGddoNg'
+    chat_id = '-1002532416599'
+    url = f'https://api.telegram.org/bot{token}/sendMessage'
+    payload = {'chat_id': chat_id, 'text': message}
+    try:
+        response = requests.post(url, data=payload)
+        response.raise_for_status()
+        print(f"✅ Telegram alert sent: {message}")
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Telegram alert failed: {e}")
+        print(f"🔎 Response: {response.text}")
 
 def clear_terminal():
     os.system('cls' if os.name == 'nt' else 'clear')
