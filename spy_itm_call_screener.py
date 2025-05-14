@@ -112,58 +112,109 @@ def get_vwap_mfi(): #VWAP BANDS INSTRUCTIONS
 def main():
     clear_terminal()
     console = Console()
-    console.print(f"[bold cyan]🔍 SPY Weekly ITM Call Screener [TEST MODE][/bold cyan]")
+    console.print(f"[bold cyan]🔍 SPY Weekly ITM Call Screener[/bold cyan]")
     console.print(f"[bold]📅 {datetime.now().strftime('%A, %B %d, %Y %I:%M %p')}[/bold]\n")
 
     try:
-        # 🔧 Test data — Reversal setup (Price < Lower Band, MFI < 30)
-        spy_price, vwap, upper_band, lower_band, mfi = 579, 585, 589, 581, 25
+        # Pull real-time SPY data
+        spy_price, vwap, upper_band, lower_band, mfi = get_vwap_mfi()
 
-        console.print(f"[green]📈 TEST → SPY Price: ${spy_price:.2f} | VWAP: ${vwap:.2f} | MFI: {mfi:.2f}[/green]")
+        if spy_price is None:
+            console.print("[red]❌ Unable to retrieve VWAP/MFI data.[/red]")
+            return
 
-        # Buy Signal Logic
+        console.print(f"[green]📈 SPY Price: ${spy_price:.2f} | VWAP: ${vwap:.2f} | MFI: {mfi:.2f}[/green]")
+
+        # Signal logic
         momentum_buy = spy_price > vwap and mfi > 50
         reversal_buy = spy_price < lower_band and mfi < 30
         buy_signal = momentum_buy or reversal_buy
         signal_type = "Momentum Breakout" if momentum_buy else "Reversal Bounce" if reversal_buy else None
 
         if buy_signal:
-            console.print(f"[bold green]✅ Test Buy Signal Triggered: {signal_type}[/bold green]\n")
+            console.print(f"[bold green]✅ Buy Signal: {signal_type}[/bold green]\n")
         else:
-            console.print("[bold red]❌ No Buy Signal Triggered[/bold red]\n")
+            console.print("[bold red]❌ No Buy Signal: SPY not meeting criteria[/bold red]\n")
 
-        # Mock contract for testing (no API calls)
-        contract_symbol = "SPYTESTCALL"
-        strike = 580.00
-        exp_date = "2025-05-17"
-        premium = 2.15
-        volume = 420
-        option_type = "Call"
+        spy = yf.Ticker("SPY")
+        expirations = spy.options
+        if not expirations:
+            console.print("[red]❌ No expiration dates found. Try again later.[/red]")
+            return
 
-        # Define reason
-        reason = ""
-        if momentum_buy:
-            reason = "📈 Price is above VWAP and MFI > 50 — indicating strong buying momentum."
-        elif reversal_buy:
-            reason = "🔁 Price is below lower VWAP band and MFI < 30 — potential oversold reversal."
+        this_friday = expirations[0]
+        options_chain = spy.option_chain(this_friday)
+        calls = options_chain.calls
+        console.print(f"[bold]🗓 Expiration: {this_friday}[/bold]")
 
-        alert = (
-            f"🚨 SPY Buy Signal [TEST MODE: {signal_type}]\n\n"
-            f"{reason}\n\n"
-            f"Price: ${spy_price:.2f}\n"
-            f"VWAP: ${vwap:.2f}\n"
-            f"MFI: {mfi:.2f}\n\n"
-            f"Suggested Contract:\n"
-            f"Ticker: SPY\n"
-            f"C/P: {option_type}\n"
-            f"Strike Price: ${strike:.2f}\n"
-            f"Premium: ${premium:.2f}\n"
-            f"Volume: {int(volume)}\n"
-            f"Exp: {exp_date}"
-        )
+        itm_calls = calls[calls['strike'] < spy_price]
+        near_itm = itm_calls[(spy_price - itm_calls['strike']) <= 5.00]
+        if near_itm.empty:
+            console.print("[yellow]⚠️ No ITM calls within $5 of SPY price found.[/yellow]")
+            return
 
-        chart_path = generate_spy_chart()
-        send_telegram_image(alert, chart_path)
+        display = near_itm[['contractSymbol', 'strike', 'lastPrice', 'impliedVolatility', 'volume', 'openInterest']].copy()
+        display.columns = ['Contract', 'Strike', 'Last Price', 'IV', 'Volume', 'OI']
+        display['Liquidity'] = (display['Volume'] / display['Last Price']).round(2)
+        display['% ITM'] = ((spy_price - display['Strike']) / spy_price * 100).round(2)
+        display = display.sort_values(by='Liquidity', ascending=False)
+
+        table = Table(title="📊 Top ITM Calls Near Spot", show_lines=True)
+        for column in display.columns:
+            table.add_column(column, justify="right" if column != "Contract" else "left")
+
+        for _, row in display.head(5).iterrows():
+            table.add_row(
+                row['Contract'],
+                f"${row['Strike']:.2f}",
+                f"${row['Last Price']:.2f}",
+                f"{row['IV']:.4f}",
+                f"{row['Volume']:.0f}",
+                f"{row['OI']:.0f}",
+                f"{row['Liquidity']:.2f}",
+                f"{row['% ITM']:.2f}%"
+            )
+
+        console.print(table)
+
+        best = display.iloc[0]
+        console.print(f"\n[bold magenta]🔥 Suggested Contract to Buy: {best['Contract']} (Strike: ${best['Strike']:.2f})[/bold magenta]")
+
+        if buy_signal:
+            contract_symbol = best['Contract']
+            strike = best['Strike']
+            exp_date = this_friday
+            premium = best['Last Price']
+            volume = best['Volume']
+            option_type = "Call" if "C" in contract_symbol else "Put"
+
+            # Reason for the signal (safe default)
+            reason = ""
+            if momentum_buy:
+                reason = "📈 Price is above VWAP and MFI > 50 — indicating strong buying momentum."
+            elif reversal_buy:
+                reason = "🔁 Price is below lower VWAP band and MFI < 30 — potential oversold reversal."
+
+            alert = (
+                f"🚨 SPY Buy Signal [{signal_type}]\n\n"
+                f"{reason}\n\n"
+                f"Price: ${spy_price:.2f}\n"
+                f"VWAP: ${vwap:.2f}\n"
+                f"MFI: {mfi:.2f}\n\n"
+                f"Suggested Contract:\n"
+                f"Ticker: SPY\n"
+                f"C/P: {option_type}\n"
+                f"Strike Price: ${strike:.2f}\n"
+                f"Premium: ${premium:.2f}\n"
+                f"Volume: {int(volume)}\n"
+                f"Exp: {exp_date}"
+            )
+
+            chart_path = generate_spy_chart()
+            send_telegram_image(alert, chart_path)
+
+        display.to_csv("spy_calls_log.csv", index=False)
 
     except Exception as e:
         console.print(f"[red]❌ Error: {e}[/red]")
+
