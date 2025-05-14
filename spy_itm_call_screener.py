@@ -116,7 +116,7 @@ def main():
     console.print(f"[bold]📅 {datetime.now().strftime('%A, %B %d, %Y %I:%M %p')}[/bold]\n")
 
     try:
-        spy_price, vwap, mfi = get_vwap_mfi()
+        spy_price, vwap, upper_band, lower_band, mfi = get_vwap_mfi()
 
         if spy_price is None:
             console.print("[red]❌ Unable to retrieve VWAP/MFI data.[/red]")
@@ -125,6 +125,7 @@ def main():
         console.print(f"[green]📈 SPY Price: ${spy_price:.2f} | VWAP: ${vwap:.2f} | MFI: {mfi:.2f}[/green]")
 
         buy_signal = True
+
         if buy_signal:
             console.print("[bold green]✅ Buy Signal: SPY is above VWAP and MFI > 50[/bold green]\n")
         else:
