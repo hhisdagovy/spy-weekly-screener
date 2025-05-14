@@ -116,12 +116,16 @@ def main():
     console.print(f"[bold]📅 {datetime.now().strftime('%A, %B %d, %Y %I:%M %p')}[/bold]\n")
 
     try:
-        # 🧪 OVERRIDE LIVE DATA FOR TESTING (remove this after)
-        spy_price, vwap, upper_band, lower_band, mfi = 579, 585, 589, 581, 25
+        # Pull real-time SPY data
+        spy_price, vwap, upper_band, lower_band, mfi = get_vwap_mfi()
+
+        if spy_price is None:
+            console.print("[red]❌ Unable to retrieve VWAP/MFI data.[/red]")
+            return
 
         console.print(f"[green]📈 SPY Price: ${spy_price:.2f} | VWAP: ${vwap:.2f} | MFI: {mfi:.2f}[/green]")
 
-        # Buy Signal Logic
+        # Signal logic
         momentum_buy = spy_price > vwap and mfi > 50
         reversal_buy = spy_price < lower_band and mfi < 30
         buy_signal = momentum_buy or reversal_buy
@@ -184,17 +188,8 @@ def main():
             volume = best['Volume']
             option_type = "Call" if "C" in contract_symbol else "Put"
 
-            # Reason for signal
-            reason = ""
-            if momentum_buy:
-                reason = "📈 Price is above VWAP and MFI > 50 — indicating strong buying momentum."
-            elif reversal_buy:
-                reason = "🔁 Price is below lower VWAP band and MFI < 30 — potential oversold reversal."
-            else:
-                
             alert = (
                 f"🚨 SPY Buy Signal [{signal_type}]\n\n"
-                f"{reason}\n\n"
                 f"Price: ${spy_price:.2f}\n"
                 f"VWAP: ${vwap:.2f}\n"
                 f"MFI: {mfi:.2f}\n\n"
