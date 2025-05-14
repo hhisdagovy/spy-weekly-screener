@@ -124,16 +124,19 @@ def main():
 
         console.print(f"[green]📈 SPY Price: ${spy_price:.2f} | VWAP: ${vwap:.2f} | MFI: {mfi:.2f}[/green]")
 
-        buy_signal = True
+        # --- Buy Signal Logic ---
+        momentum_buy = spy_price > vwap and mfi > 50
+        reversal_buy = True
+        buy_signal = momentum_buy or reversal_buy
+        signal_type = "Momentum Breakout" if momentum_buy else "Reversal Bounce" if reversal_buy else None
 
         if buy_signal:
-            console.print("[bold green]✅ Buy Signal: SPY is above VWAP and MFI > 50[/bold green]\n")
+            console.print(f"[bold green]✅ Buy Signal: {signal_type}[/bold green]\n")
         else:
-            console.print("[bold red]❌ No Buy Signal: SPY below VWAP or MFI too low[/bold red]\n")
+            console.print("[bold red]❌ No Buy Signal: SPY not meeting criteria[/bold red]\n")
 
         spy = yf.Ticker("SPY")
         expirations = spy.options
-
         if not expirations:
             console.print("[red]❌ No expiration dates found. Try again later.[/red]")
             return
@@ -141,12 +144,10 @@ def main():
         this_friday = expirations[0]
         options_chain = spy.option_chain(this_friday)
         calls = options_chain.calls
-
         console.print(f"[bold]🗓 Expiration: {this_friday}[/bold]")
 
         itm_calls = calls[calls['strike'] < spy_price]
         near_itm = itm_calls[(spy_price - itm_calls['strike']) <= 5.00]
-
         if near_itm.empty:
             console.print("[yellow]⚠️ No ITM calls within $5 of SPY price found.[/yellow]")
             return
@@ -187,7 +188,7 @@ def main():
             option_type = "Call" if "C" in contract_symbol else "Put"
 
             alert = (
-                f"🚨 SPY Buy Signal\n\n"
+                f"🚨 SPY Buy Signal [{signal_type}]\n\n"
                 f"Price: ${spy_price:.2f}\n"
                 f"VWAP: ${vwap:.2f}\n"
                 f"MFI: {mfi:.2f}\n\n"
