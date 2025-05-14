@@ -126,7 +126,7 @@ def main():
 
         # --- Buy Signal Logic ---
         momentum_buy = spy_price > vwap and mfi > 50
-        reversal_buy = spy_price < lower_band and mfi < 30
+        reversal_buy = True
         buy_signal = momentum_buy or reversal_buy
         signal_type = "Momentum Breakout" if momentum_buy else "Reversal Bounce" if reversal_buy else None
 
@@ -187,6 +187,13 @@ def main():
             volume = best['Volume']
             option_type = "Call" if "C" in contract_symbol else "Put"
 
+          if momentum_buy:
+            reason = "Price is above VWAP and MFI indicates strong buying momentum (MFI > 50)."
+        elif reversal_buy:
+            reason = "Price is below the lower VWAP band and MFI indicates potential reversal (MFI < 30)."
+        else:
+            reason = ""
+
             alert = (
                 f"🚨 SPY Buy Signal [{signal_type}]\n\n"
                 f"Price: ${spy_price:.2f}\n"
@@ -199,6 +206,7 @@ def main():
                 f"Premium: ${premium:.2f}\n"
                 f"Volume: {int(volume)}\n"
                 f"Exp: {exp_date}"
+                f"{reason}\n\n"
             )
 
             chart_path = generate_spy_chart()
