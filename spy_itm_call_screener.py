@@ -124,7 +124,7 @@ def main():
 
         console.print(f"[green]📈 SPY Price: ${spy_price:.2f} | VWAP: ${vwap:.2f} | MFI: {mfi:.2f}[/green]")
 
-        # --- Buy Signal Logic ---
+        # Buy Signal Logic
         momentum_buy = spy_price > vwap and mfi > 50
         reversal_buy = True
         buy_signal = momentum_buy or reversal_buy
@@ -179,7 +179,7 @@ def main():
         best = display.iloc[0]
         console.print(f"\n[bold magenta]🔥 Suggested Contract to Buy: {best['Contract']} (Strike: ${best['Strike']:.2f})[/bold magenta]")
 
-                if buy_signal:
+        if buy_signal:
             contract_symbol = best['Contract']
             strike = best['Strike']
             exp_date = this_friday
@@ -187,7 +187,7 @@ def main():
             volume = best['Volume']
             option_type = "Call" if "C" in contract_symbol else "Put"
 
-            # ✅ FIXED INDENTATION BELOW
+            # Explanation for the buy signal
             if momentum_buy:
                 reason = "📈 Price is above VWAP and MFI > 50 — indicating strong buying momentum."
             elif reversal_buy:
@@ -217,3 +217,4 @@ def main():
 
     except Exception as e:
         console.print(f"[red]❌ Error: {e}[/red]")
+
