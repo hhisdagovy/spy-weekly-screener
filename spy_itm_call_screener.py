@@ -116,17 +116,14 @@ def main():
     console.print(f"[bold]📅 {datetime.now().strftime('%A, %B %d, %Y %I:%M %p')}[/bold]\n")
 
     try:
-        spy_price, vwap, upper_band, lower_band, mfi = get_vwap_mfi()
-
-        if spy_price is None:
-            console.print("[red]❌ Unable to retrieve VWAP/MFI data.[/red]")
-            return
+        # 🧪 OVERRIDE LIVE DATA FOR TESTING (remove this after)
+        spy_price, vwap, upper_band, lower_band, mfi = 579, 585, 589, 581, 25
 
         console.print(f"[green]📈 SPY Price: ${spy_price:.2f} | VWAP: ${vwap:.2f} | MFI: {mfi:.2f}[/green]")
 
         # Buy Signal Logic
         momentum_buy = spy_price > vwap and mfi > 50
-        reversal_buy = spy_price, vwap, upper_band, lower_band, mfi = 579, 585, 589, 581, 25
+        reversal_buy = spy_price < lower_band and mfi < 30
         buy_signal = momentum_buy or reversal_buy
         signal_type = "Momentum Breakout" if momentum_buy else "Reversal Bounce" if reversal_buy else None
 
@@ -187,7 +184,7 @@ def main():
             volume = best['Volume']
             option_type = "Call" if "C" in contract_symbol else "Put"
 
-            # Explanation for the buy signal
+            # Reason for signal
             if momentum_buy:
                 reason = "📈 Price is above VWAP and MFI > 50 — indicating strong buying momentum."
             elif reversal_buy:
@@ -217,4 +214,3 @@ def main():
 
     except Exception as e:
         console.print(f"[red]❌ Error: {e}[/red]")
-
