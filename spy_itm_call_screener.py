@@ -185,13 +185,13 @@ def main():
             option_type = "Call" if "C" in contract_symbol else "Put"
 
             # Reason for signal
+            reason = ""
             if momentum_buy:
                 reason = "📈 Price is above VWAP and MFI > 50 — indicating strong buying momentum."
             elif reversal_buy:
                 reason = "🔁 Price is below lower VWAP band and MFI < 30 — potential oversold reversal."
             else:
-                reason = ""
-
+                
             alert = (
                 f"🚨 SPY Buy Signal [{signal_type}]\n\n"
                 f"{reason}\n\n"
