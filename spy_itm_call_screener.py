@@ -192,12 +192,9 @@ def main():
                 reason = "📈 Price is above VWAP and MFI > 50 — indicating strong buying momentum."
             elif reversal_buy:
                 reason = "🔁 Price is below lower VWAP band and MFI < 30 — potential oversold reversal."
-            else:
-                reason = ""
 
             alert = (
                 f"🚨 SPY Buy Signal [{signal_type}]\n\n"
-                f"{reason}\n\n"
                 f"Price: ${spy_price:.2f}\n"
                 f"VWAP: ${vwap:.2f}\n"
                 f"MFI: {mfi:.2f}\n\n"
@@ -208,6 +205,7 @@ def main():
                 f"Premium: ${premium:.2f}\n"
                 f"Volume: {int(volume)}\n"
                 f"Exp: {exp_date}"
+                f"{reason}\n\n"
             )
 
             chart_path = generate_spy_chart()
