@@ -179,7 +179,7 @@ def main():
         best = display.iloc[0]
         console.print(f"\n[bold magenta]🔥 Suggested Contract to Buy: {best['Contract']} (Strike: ${best['Strike']:.2f})[/bold magenta]")
 
-        if buy_signal:
+                if buy_signal:
             contract_symbol = best['Contract']
             strike = best['Strike']
             exp_date = this_friday
@@ -187,14 +187,17 @@ def main():
             volume = best['Volume']
             option_type = "Call" if "C" in contract_symbol else "Put"
 
-            # Reason for the alert
+            # ✅ FIXED INDENTATION BELOW
             if momentum_buy:
                 reason = "📈 Price is above VWAP and MFI > 50 — indicating strong buying momentum."
             elif reversal_buy:
                 reason = "🔁 Price is below lower VWAP band and MFI < 30 — potential oversold reversal."
+            else:
+                reason = ""
 
             alert = (
                 f"🚨 SPY Buy Signal [{signal_type}]\n\n"
+                f"{reason}\n\n"
                 f"Price: ${spy_price:.2f}\n"
                 f"VWAP: ${vwap:.2f}\n"
                 f"MFI: {mfi:.2f}\n\n"
@@ -205,7 +208,6 @@ def main():
                 f"Premium: ${premium:.2f}\n"
                 f"Volume: {int(volume)}\n"
                 f"Exp: {exp_date}"
-                f"{reason}\n\n"
             )
 
             chart_path = generate_spy_chart()
