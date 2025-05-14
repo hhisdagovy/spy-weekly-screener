@@ -126,7 +126,7 @@ def main():
 
         # --- Buy Signal Logic ---
         momentum_buy = spy_price > vwap and mfi > 50
-        reversal_buy = True
+        reversal_buy = spy_price < lower_band and mfi < 30
         buy_signal = momentum_buy or reversal_buy
         signal_type = "Momentum Breakout" if momentum_buy else "Reversal Bounce" if reversal_buy else None
 
@@ -187,15 +187,17 @@ def main():
             volume = best['Volume']
             option_type = "Call" if "C" in contract_symbol else "Put"
 
-          if momentum_buy:
-            reason = "Price is above VWAP and MFI indicates strong buying momentum (MFI > 50)."
-        elif reversal_buy:
-            reason = "Price is below the lower VWAP band and MFI indicates potential reversal (MFI < 30)."
-        else:
-            reason = ""
+            # Reason for the alert
+            if momentum_buy:
+                reason = "📈 Price is above VWAP and MFI > 50 — indicating strong buying momentum."
+            elif reversal_buy:
+                reason = "🔁 Price is below lower VWAP band and MFI < 30 — potential oversold reversal."
+            else:
+                reason = ""
 
             alert = (
                 f"🚨 SPY Buy Signal [{signal_type}]\n\n"
+                f"{reason}\n\n"
                 f"Price: ${spy_price:.2f}\n"
                 f"VWAP: ${vwap:.2f}\n"
                 f"MFI: {mfi:.2f}\n\n"
@@ -206,7 +208,6 @@ def main():
                 f"Premium: ${premium:.2f}\n"
                 f"Volume: {int(volume)}\n"
                 f"Exp: {exp_date}"
-                f"{reason}\n\n"
             )
 
             chart_path = generate_spy_chart()
@@ -216,6 +217,3 @@ def main():
 
     except Exception as e:
         console.print(f"[red]❌ Error: {e}[/red]")
-
-if __name__ == "__main__":
-    main()
