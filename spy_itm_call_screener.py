@@ -188,16 +188,8 @@ def main():
             volume = best['Volume']
             option_type = "Call" if "C" in contract_symbol else "Put"
 
-            # Reason for the signal (safe default)
-            reason = ""
-            if momentum_buy:
-                reason = "📈 Price is above VWAP and MFI > 50 — indicating strong buying momentum."
-            elif reversal_buy:
-                reason = "🔁 Price is below lower VWAP band and MFI < 30 — potential oversold reversal."
-
             alert = (
                 f"🚨 SPY Buy Signal [{signal_type}]\n\n"
-                f"{reason}\n\n"
                 f"Price: ${spy_price:.2f}\n"
                 f"VWAP: ${vwap:.2f}\n"
                 f"MFI: {mfi:.2f}\n\n"
