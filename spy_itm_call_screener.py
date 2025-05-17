@@ -8,8 +8,8 @@ from ta.volume import MFIIndicator
 import requests
 import matplotlib.pyplot as plt
 from matplotlib.dates import DateFormatter
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
 
 load_dotenv()
 
