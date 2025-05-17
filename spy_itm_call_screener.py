@@ -126,7 +126,7 @@ def main():
         console.print(f"[green]📈 SPY Price: ${spy_price:.2f} | VWAP: ${vwap:.2f} | MFI: {mfi:.2f}[/green]")
 
         # Signal logic
-        momentum_buy = spy_price > vwap and mfi > 50
+        momentum_buy = True
         reversal_buy = spy_price < lower_band and mfi < 30
         buy_signal = momentum_buy or reversal_buy
         signal_type = "Momentum Breakout" if momentum_buy else "Reversal Bounce" if reversal_buy else None
@@ -138,6 +138,7 @@ def main():
 
         spy = yf.Ticker("SPY")
         expirations = spy.options
+
         if not expirations:
             console.print("[red]❌ No expiration dates found. Try again later.[/red]")
             return
@@ -145,10 +146,12 @@ def main():
         this_friday = expirations[0]
         options_chain = spy.option_chain(this_friday)
         calls = options_chain.calls
+        
         console.print(f"[bold]🗓 Expiration: {this_friday}[/bold]")
 
         itm_calls = calls[calls['strike'] < spy_price]
         near_itm = itm_calls[(spy_price - itm_calls['strike']) <= 5.00]
+        
         if near_itm.empty:
             console.print("[yellow]⚠️ No ITM calls within $5 of SPY price found.[/yellow]")
             return
@@ -210,3 +213,5 @@ def main():
     except Exception as e:
         console.print(f"[red]❌ Error: {e}[/red]")
 
+if __name__ == "__main__":
+    main()
