@@ -163,7 +163,7 @@ def main():
         if buy_signal:
             console.print(f"[bold green]✅ Buy Signal: {signal_type}[/bold green]\n")
 
-            place_order("SPY", qty=1, side="buy")
+            place_order(best['Contract'], qty=1, side="buy")  # this is the option contract
 
         else:
             console.print("[bold red]❌ No Buy Signal: SPY not meeting criteria[/bold red]\n")
