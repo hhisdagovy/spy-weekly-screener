@@ -8,6 +8,35 @@ from ta.volume import MFIIndicator
 import requests
 import matplotlib.pyplot as plt
 from matplotlib.dates import DateFormatter
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+ALPACA_API_KEY = os.getenv("APCA_API_KEY_ID")
+ALPACA_SECRET_KEY = os.getenv("APCA_API_SECRET_KEY")
+ALPACA_BASE_URL = os.getenv("APCA_API_BASE_URL")
+
+def place_order(symbol, qty=1, side="buy", order_type="market", time_in_force="gtc"):
+    url = f"{ALPACA_BASE_URL}/v2/orders"
+    headers = {
+        "APCA-API-KEY-ID": ALPACA_API_KEY,
+        "APCA-API-SECRET-KEY": ALPACA_SECRET_KEY
+    }
+    order_data = {
+        "symbol": symbol,
+        "qty": qty,
+        "side": side,
+        "type": order_type,
+        "time_in_force": time_in_force
+    }
+
+    response = requests.post(url, json=order_data, headers=headers)
+
+    if response.status_code == 200:
+        print(f"✅ Order placed for {symbol}")
+    else:
+        print(f"❌ Order failed: {response.text}")
 
 def generate_spy_chart(): #CHARTING
     df = yf.download("SPY", interval="5m", period="1d", progress=False)
@@ -126,13 +155,16 @@ def main():
         console.print(f"[green]📈 SPY Price: ${spy_price:.2f} | VWAP: ${vwap:.2f} | MFI: {mfi:.2f}[/green]")
 
         # Signal logic
-        momentum_buy = spy_price > vwap and mfi > 50
+        momentum_buy = True #testing
         reversal_buy = spy_price < lower_band and mfi < 30
         buy_signal = momentum_buy or reversal_buy
         signal_type = "Momentum Breakout" if momentum_buy else "Reversal Bounce" if reversal_buy else None
 
         if buy_signal:
             console.print(f"[bold green]✅ Buy Signal: {signal_type}[/bold green]\n")
+
+            place_order("SPY", qty=1, side="buy")
+
         else:
             console.print("[bold red]❌ No Buy Signal: SPY not meeting criteria[/bold red]\n")
 
