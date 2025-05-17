@@ -20,7 +20,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install yfinance pandas ta rich matplotlib pillow requests
+          pip install yfinance pandas ta rich matplotlib pillow requests python-dotenv
 
       - name: Run script
         run: python spy_itm_call_screener.py
