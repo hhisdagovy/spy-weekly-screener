@@ -127,7 +127,7 @@ def main():
 
         # Signal logic
         momentum_buy = spy_price > vwap and mfi > 50
-        reversal_buy = True
+        reversal_buy = spy_price < lower_band and mfi < 30
         buy_signal = momentum_buy or reversal_buy
         signal_type = "Momentum Breakout" if momentum_buy else "Reversal Bounce" if reversal_buy else None
 
